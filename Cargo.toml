@@ -1,6 +1,6 @@
 [package]
 authors = ["周睿 <zrufo747@outlook.com>"]
-categories = ["development-tools", "FFI"]
+categories = ["development-tools"]
 description = "A Rust procedural macro library for creating and implementing extern fn with Trait."
 edition = "2024"
 keywords = ["proc-macro", "abi", "trait", "extern"]
