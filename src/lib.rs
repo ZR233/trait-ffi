@@ -100,7 +100,14 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
             );
         }
     }
+
     let crate_name = format_ident!("{crate_name_str}");
+
+    let warn_fn_name = format_ident!(
+        "Trait_{}_in_crate_{}_need_impl",
+        input.ident,
+        crate_name_str.replace("-", "_")
+    );
 
     let generated_macro = quote! {
         #[macro_export]
@@ -110,9 +117,14 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
                 impl $trait for $type {
                     $($body)*
                 }
+
+                #[allow(snake_case)]
+                #[unsafe(no_mangle)]
+                extern "C" fn #warn_fn_name() { }
             };
         }
     };
+
     quote! {
         pub use extern_trait::impl_extern_trait;
 
@@ -120,7 +132,12 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
 
         #vis mod #mod_name {
             use super::*;
-
+            pub fn ____checker_do_not_use(){
+                unsafe extern "C" {
+                    fn #warn_fn_name();
+                }
+                unsafe { #warn_fn_name() };
+            }
             #(#fn_list)*
         }
 
