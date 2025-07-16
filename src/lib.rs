@@ -212,18 +212,33 @@ pub fn impl_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
 
     let prefix = make_prefix(&crate_name_str);
 
+    let struct_name = input.self_ty.clone();
+    let trait_name = input.clone().trait_.unwrap().1;
+
     for item in &input.items {
         if let syn::ImplItem::Fn(func) = item {
-            let fn_name = format_ident!("{prefix}{}", func.sig.ident);
+            let fn_name_raw = &func.sig.ident;
+            let fn_name = format_ident!("{prefix}{fn_name_raw}");
             let inputs = &func.sig.inputs;
             let output = &func.sig.output;
-            let block = &func.block;
 
             let extern_abi = if abi == "rust" { "Rust" } else { "C" };
 
+            let mut param_names = vec![];
+            let mut param_types = vec![];
+
+            for input in inputs {
+                if let syn::FnArg::Typed(pat_type) = input {
+                    param_names.push(&pat_type.pat);
+                    param_types.push(&pat_type.ty);
+                }
+            }
+
             extern_fn_list.push(quote! {
                 #[unsafe(no_mangle)]
-                pub extern #extern_abi fn #fn_name(#inputs) #output #block
+                pub extern #extern_abi fn #fn_name(#inputs) #output {
+                    <#struct_name as #trait_name>::#fn_name_raw(#(#param_names),*)
+                }
             });
         }
     }
