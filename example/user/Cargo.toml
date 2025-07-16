@@ -5,5 +5,5 @@ publish = false
 version = "0.1.0"
 
 [dependencies]
-interface = {path = "../interface"}
+interface-demo = {path = "../interface"}
 trait-ffi = {path = "../.."}

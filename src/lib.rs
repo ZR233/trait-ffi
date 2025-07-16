@@ -101,7 +101,7 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
         }
     }
 
-    let crate_name = format_ident!("{crate_name_str}");
+    let crate_name = format_ident!("{}", crate_name_str.replace("-", "_"));
 
     let warn_fn_name = format_ident!(
         "Trait_{}_in_crate_{}_need_impl",

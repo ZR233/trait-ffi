@@ -1,4 +1,4 @@
-use interface::{DemeIf, impl_trait};
+use interface_demo::{DemeIf, impl_trait};
 
 pub struct MyImpl;
 
@@ -16,7 +16,7 @@ mod tests {
 
     #[test]
     fn test_say_hello() {
-        let result = interface::if_say_hello(3);
+        let result = interface_demo::if_say_hello(3);
         assert_eq!(result, 6);
     }
 }
