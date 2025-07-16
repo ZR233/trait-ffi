@@ -1,6 +1,12 @@
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::{ItemImpl, ItemTrait, parse_macro_input};
+use syn::{ItemImpl, ItemTrait, parse_macro_input, spanned::Spanned};
+
+macro_rules! bail {
+    ($i:expr, $msg:expr) => {
+        return syn::parse::Error::new($i, $msg).to_compile_error().into();
+    };
+}
 
 fn get_crate_name() -> String {
     std::env::var("CARGO_PKG_NAME").unwrap_or_else(|_| "unknown".to_string())
@@ -43,6 +49,11 @@ pub fn def_extern_trait(_args: TokenStream, input: TokenStream) -> TokenStream {
                     unsafe{ #extern_fn_name(#(#param_names),*) }
                 }
             });
+        } else {
+            bail!(
+                item.span(),
+                "Only function items are allowed in extern traits"
+            );
         }
     }
     let crate_name = format_ident!("{crate_name_str}");
@@ -130,7 +141,6 @@ pub fn impl_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
             });
         }
     }
-
 
     quote! {
         #input
