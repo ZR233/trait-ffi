@@ -1,13 +1,12 @@
 [package]
-authors = ["Your Name <your.email@example.com>"]
-categories = ["development-tools::procedural-macro-helpers"]
-description = "一个用于获取使用过程宏的 crate 名称的 Rust 过程宏库"
-documentation = "https://docs.rs/extern-trait"
+authors = ["周睿 <zrufo747@outlook.com>"]
+categories = ["development-tools", "FFI"]
+description = "A Rust procedural macro library for creating and implementing extern fn with Trait."
 edition = "2024"
-keywords = ["proc-macro", "crate-name", "compile-time"]
+keywords = ["proc-macro", "abi", "trait", "extern"]
 license = "MIT"
 name = "extern-trait"
-repository = "https://github.com/yourusername/extern-trait"
+repository = "https://github.com/ZR233/extern-trait"
 version = "0.1.0"
 
 [lib]

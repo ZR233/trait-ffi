@@ -1,108 +1,94 @@
 # extern-trait
 
-一个用于获取使用过程宏的 crate 名称的 Rust 过程宏库。
+A Rust procedural macro library for creating and implementing extern fn with Trait.
 
-## 功能
+## Features
 
-这个库提供了多种方式来获取调用者的 crate 名称：
+This library provides procedural macros to define and implement cross-crate extern func, supporting:
 
-1. **函数宏** (`extern_crate_name!()`) - 直接返回 crate 名称
-2. **属性宏** (`#[get_extern_crate_name]`) - 为结构体添加获取 crate 名称的方法
-3. **Derive 宏** (`#[derive(ExternCrateName)]`) - 通过 derive 为结构体添加方法
-4. **信息模块宏** (`create_crate_info!()`) - 创建包含完整 crate 信息的模块
+1. **Define external traits** (`#[def_extern_trait]`) - Define a trait that can be implemented across crates
+2. **Generated implementation macros** (`impl_trait!`) - Auto-generated macros for simplified trait implementation
+3. **Multiple ABI support** - Support for both C and Rust ABIs
 
-## 使用方法
+## Usage
 
-### 1. 函数宏
+### Define external traits
+
+Define an external trait in the interface crate:
 
 ```rust
-use extern_trait::extern_crate_name;
+use extern_trait::*;
 
-fn main() {
-    let crate_name = extern_crate_name!();
-    println!("当前 crate 名称: {}", crate_name);
+#[def_extern_trait]
+pub trait DemeIf {
+    fn say_hello(a: usize) -> i32;
+}
+
+pub fn if_say_hello(a: usize) -> i32 {
+    println!("Hello from DemeIf with value: {}", a);
+    demeif::say_hello(a)
 }
 ```
 
-### 2. 属性宏
+### Implement external traits
+
+Implement the external trait in the implementation crate:
 
 ```rust
-use extern_trait::get_extern_crate_name;
+use interface::{DemeIf, impl_trait};
 
-#[get_extern_crate_name]
-struct MyService;
+pub struct MyImpl;
 
-fn main() {
-    let crate_name = MyService::get_crate_name();
-    println!("Crate 名称: {}", crate_name);
+impl_trait! {
+    impl DemeIf for MyImpl {
+        fn say_hello(a: usize) -> i32 {
+            println!("Hello from MyImpl with value: {}", a);
+            (a * 2) as i32
+        }
+    }
 }
 ```
 
-### 3. Derive 宏
+### Specify ABI
+
+You can specify the ABI for external traits (default is "rust"):
 
 ```rust
-use extern_trait::ExternCrateName;
-
-#[derive(ExternCrateName)]
-struct MyStruct;
-
-fn main() {
-    let crate_name = MyStruct::get_crate_name();
-    println!("Crate 名称: {}", crate_name);
+#[def_extern_trait(abi = "c")]
+pub trait MyTrait {
+    fn my_function() -> i32;
 }
 ```
 
-### 4. 信息模块宏
+Supported ABI types:
 
-```rust
-use extern_trait::create_crate_info;
+- `"rust"` - Rust ABI (default)
+- `"c"` - C ABI
 
-create_crate_info!();
+## How it works
 
-fn main() {
-    println!("Crate 名称: {}", crate_info::NAME);
-    println!("Crate 版本: {}", crate_info::VERSION);
-    println!("Crate 作者: {}", crate_info::AUTHORS);
-    println!("Crate 描述: {}", crate_info::DESCRIPTION);
-    
-    let info = crate_info::get_info();
-    println!("完整信息: {:?}", info);
-}
-```
+This library uses Rust's procedural macro system to generate cross-crate external function calls:
 
-## 工作原理
+1. **Definition stage**: The `#[def_extern_trait]` macro generates corresponding external function declarations and call wrappers for each function in the trait
+2. **Implementation stage**: The `#[impl_extern_trait]` macro generates `#[no_mangle]` external functions for the implemented functions
+3. **Linking stage**: Through function name prefix conventions, ensures that the interface crate can correctly call functions in the implementation crate
 
-这个库利用 Rust 的编译时环境变量来获取 crate 信息：
+Generated function names use the crate name as a prefix, e.g., `__mycrate_function_name`, to avoid symbol conflicts.
 
-- `CARGO_PKG_NAME` - crate 名称
-- `CARGO_PKG_VERSION` - crate 版本
-- `CARGO_PKG_AUTHORS` - crate 作者
-- `CARGO_PKG_DESCRIPTION` - crate 描述
+## Key Features
 
-这些信息在编译时被嵌入到生成的代码中，因此不会有运行时开销。
+- **Type safety**: Maintains complete Rust type system safety
+- **Zero runtime overhead**: All processing is done at compile time
+- **Multiple ABI support**: Supports both C and Rust ABIs
+- **Automatic symbol management**: Automatically handles function name prefixes to avoid symbol conflicts
+- **Easy to use**: Provides clean macro interfaces
 
-## 示例
+## Limitations
 
-运行示例：
+- Only supports function-type trait items
+- Requires linking implementation crates at compile time
+- Function parameters and return values must be FFI-safe types (when using C ABI)
 
-```bash
-cd example/interface
-cargo run --bin demo
-```
+## License
 
-运行测试：
-
-```bash
-cd example/interface
-cargo test
-```
-
-## 依赖
-
-- `proc-macro2` - 用于处理过程宏的 token
-- `quote` - 用于生成 Rust 代码
-- `syn` - 用于解析 Rust 语法
-
-## 许可证
-
-本项目采用 MIT 许可证。
+This project is licensed under the MIT License.
