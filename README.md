@@ -1,4 +1,4 @@
-# extern-trait
+# trait-ffi
 
 A Rust procedural macro library for creating and implementing extern fn with Trait.
 

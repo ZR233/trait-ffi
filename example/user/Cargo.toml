@@ -1,9 +1,9 @@
 [package]
-name = "user"
-version = "0.1.0"
 edition = "2024"
+name = "user"
 publish = false
+version = "0.1.0"
 
 [dependencies]
-extern-trait = {path = "../.."}
 interface = {path = "../interface"}
+trait-ffi = {path = "../.."}

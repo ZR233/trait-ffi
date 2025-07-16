@@ -5,8 +5,8 @@ description = "A Rust procedural macro library for creating and implementing ext
 edition = "2024"
 keywords = ["proc-macro", "abi", "trait", "extern"]
 license = "MIT"
-name = "extern-trait"
-repository = "https://github.com/ZR233/extern-trait"
+name = "trait-ffi"
+repository = "https://github.com/ZR233/trait-ffi"
 version = "0.1.0"
 
 [lib]

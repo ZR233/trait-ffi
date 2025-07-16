@@ -9,4 +9,4 @@ name = "demo"
 path = "src/main.rs"
 
 [dependencies]
-extern-trait = {path = "../.."}
+trait-ffi = {path = "../.."}

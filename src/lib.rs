@@ -126,7 +126,7 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
     };
 
     quote! {
-        pub use extern_trait::impl_extern_trait;
+        pub use trait_ffi::impl_extern_trait;
 
         #input
 

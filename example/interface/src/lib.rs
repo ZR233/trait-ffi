@@ -1,4 +1,4 @@
-use extern_trait::*;
+use trait_ffi::*;
 
 #[def_extern_trait]
 pub trait DemeIf {
@@ -6,6 +6,6 @@ pub trait DemeIf {
 }
 
 pub fn if_say_hello(a: usize) -> i32 {
-    println!("Hello from DemeIf with value: {}", a);
+    println!("Hello from DemeIf with value: {a}");
     demeif::say_hello(a)
 }
