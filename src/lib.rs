@@ -182,6 +182,7 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
 
         #vis mod #mod_name {
             use super::*;
+            /// `trait-ffi` generated.
             pub fn ____checker_do_not_use(){
                 unsafe extern "C" {
                     fn #warn_fn_name();
@@ -302,6 +303,7 @@ pub fn impl_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
             }
 
             extern_fn_list.push(quote! {
+                /// `trait-ffi` generated extern function.
                 #[unsafe(no_mangle)]
                 pub extern #extern_abi fn #fn_name(#inputs) #output {
                     <#struct_name as #trait_name>::#fn_name_raw(#(#param_names),*)
