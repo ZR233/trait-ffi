@@ -73,7 +73,22 @@ This library uses Rust's procedural macro system to generate cross-crate externa
 2. **Implementation stage**: The `#[impl_extern_trait]` macro generates `#[no_mangle]` external functions for the implemented functions
 3. **Linking stage**: Through function name prefix conventions, ensures that the interface crate can correctly call functions in the implementation crate
 
-Generated function names use the crate name as a prefix, e.g., `__mycrate_function_name`, to avoid symbol conflicts.
+Generated function names use the crate name and version as a prefix, e.g., `__mycrate_0_2_function_name`, to avoid symbol conflicts and ensure version compatibility.
+
+### Version Control
+
+This library implements automatic version control to ensure compatibility across different versions:
+
+- **Semantic versioning**: Uses the crate's semantic version (major.minor.patch) from `Cargo.toml`
+- **Version-based symbol naming**: 
+  - For version `0.x.y`: Uses `0_x` as the version prefix (e.g., `0_2` for version `0.2.0`)
+  - For version `x.y.z` where `x >= 1`: Uses major version `x` as the prefix (e.g., `1` for version `1.2.3`)
+- **Automatic compatibility checking**: Generates checker functions to ensure interface and implementation versions match
+- **Symbol conflict prevention**: Different versions generate different symbol names, preventing linking conflicts
+
+**Example symbol naming**:
+- Crate: `my-interface`, Version: `0.2.0`, Function: `say_hello`
+- Generated symbol: `__my_interface_0_2_say_hello`
 
 ## Key Features
 
@@ -81,6 +96,7 @@ Generated function names use the crate name as a prefix, e.g., `__mycrate_functi
 - **Zero runtime overhead**: All processing is done at compile time
 - **Multiple ABI support**: Supports both C and Rust ABIs
 - **Automatic symbol management**: Automatically handles function name prefixes to avoid symbol conflicts
+- **Version compatibility management**: Automatically manages function symbol versioning based on semantic versioning
 - **Easy to use**: Provides clean macro interfaces
 
 ## Limitations
@@ -88,6 +104,8 @@ Generated function names use the crate name as a prefix, e.g., `__mycrate_functi
 - Only supports function-type trait items
 - Requires linking implementation crates at compile time
 - Function parameters and return values must be FFI-safe types (when using C ABI)
+- Interface and implementation crates must use compatible versions (same version prefix)
+- Breaking changes in trait definitions require version updates
 
 ## License
 
