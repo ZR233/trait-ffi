@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use convert_case::Casing;
 use proc_macro::TokenStream;
 use proc_macro2::Span;
@@ -13,6 +15,7 @@ macro_rules! bail {
 fn get_crate_name() -> String {
     std::env::var("CARGO_PKG_NAME").unwrap_or_else(|_| "unknown".to_string())
 }
+
 fn get_crate_version() -> String {
     std::env::var("CARGO_PKG_VERSION").unwrap_or_else(|_| "0.1.0".to_string())
 }
@@ -68,6 +71,28 @@ fn parse_def_extern_trait_args(args: TokenStream) -> Result<String, String> {
     Ok(abi)
 }
 
+/// Defines an extern trait that can be called across FFI boundaries.
+///
+/// This macro converts a regular Rust trait into a trait that can be called through FFI.
+/// It generates:
+/// 1. The original trait definition
+/// 2. A module containing wrapper functions that call external implementations
+/// 3. A helper macro `impl_trait!` for implementing the trait
+/// 4. A checker function to ensure the trait is properly implemented
+///
+/// # Arguments
+/// - `abi`: Optional parameter specifying ABI type ("c" or "rust"), defaults to "rust"
+///
+/// # Example
+/// ```rust
+/// #[def_extern_trait(abi = "c")]
+/// trait Calculator {
+///     fn add(&self, a: i32, b: i32) -> i32;
+///     fn multiply(&self, a: i32, b: i32) -> i32;
+/// }
+/// ```
+///
+/// This will generate a `calculator` module containing functions that can call external implementations.
 #[proc_macro_attribute]
 pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
     let abi = match parse_def_extern_trait_args(args) {
@@ -96,7 +121,6 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
             let inputs = &func.sig.inputs;
             let output = &func.sig.output;
 
-            // 生成参数名和类型
             let mut param_names = vec![];
             let mut param_types = vec![];
 
@@ -184,7 +208,6 @@ fn parse_extern_trait_args(args: TokenStream) -> Result<(String, String), String
     let mut name = None;
     let mut abi = None;
 
-    // 简单解析 name="value", abi="value" 形式
     let parts: Vec<&str> = args_str.split(',').collect();
 
     for part in parts {
@@ -221,6 +244,29 @@ fn parse_extern_trait_args(args: TokenStream) -> Result<(String, String), String
     Ok((name, abi))
 }
 
+/// Implements an extern trait for a type and generates corresponding C function exports.
+///
+/// This macro takes a trait implementation and generates extern "C" functions that can be
+/// called from other languages. Each method in the trait implementation gets a corresponding
+/// extern function with a mangled name based on the crate name and version.
+///
+/// # Arguments
+/// - `name`: The name of the crate that defines the extern trait
+/// - `abi`: The ABI to use for the extern functions ("c" or "rust"), defaults to "c"
+///
+/// # Example
+/// ```rust
+/// struct Calculator;
+///
+/// #[impl_extern_trait(name = "calculator_crate", abi = "c")]
+/// impl MyTrait for Calculator {
+///     fn add(&self, a: i32, b: i32) -> i32 {
+///         a + b
+///     }
+/// }
+/// ```
+///
+/// This will generate extern "C" functions that can be called from other languages.
 #[proc_macro_attribute]
 pub fn impl_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
     let (crate_name_str, abi) = match parse_extern_trait_args(args) {
