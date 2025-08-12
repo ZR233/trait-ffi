@@ -120,6 +120,7 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
             let attrs = &func.attrs;
             let inputs = &func.sig.inputs;
             let output = &func.sig.output;
+            let generics = &func.sig.generics;
 
             let mut param_names = vec![];
             let mut param_types = vec![];
@@ -135,9 +136,9 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
 
             fn_list.push(quote! {
                 #(#attrs)*
-                pub fn #fn_name(#inputs) #output {
+                pub fn #fn_name #generics (#inputs) #output {
                     unsafe extern #extern_abi {
-                        fn #extern_fn_name(#inputs) #output;
+                        fn #extern_fn_name #generics (#inputs) #output;
                     }
                     unsafe{ #extern_fn_name(#(#param_names),*) }
                 }
@@ -289,6 +290,7 @@ pub fn impl_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
 
             let inputs = &func.sig.inputs;
             let output = &func.sig.output;
+            let generics = &func.sig.generics;
 
             let extern_abi = if abi == "rust" { "Rust" } else { "C" };
 
@@ -305,7 +307,7 @@ pub fn impl_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
             extern_fn_list.push(quote! {
                 /// `trait-ffi` generated extern function.
                 #[unsafe(no_mangle)]
-                pub extern #extern_abi fn #fn_name(#inputs) #output {
+                pub extern #extern_abi fn #fn_name #generics (#inputs) #output {
                     <#struct_name as #trait_name>::#fn_name_raw(#(#param_names),*)
                 }
             });

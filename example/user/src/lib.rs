@@ -4,7 +4,7 @@ pub struct MyImpl;
 
 impl_trait! {
     impl DemeIf for MyImpl {
-        fn say_hello(a: usize) -> i32 {
+        fn say_hello<'a>(a: usize) -> i32 {
             println!("Hello from MyImpl with value: {a}");
             (a * 2) as i32
         }
