@@ -33,9 +33,9 @@ fn prefix_version() -> String {
 
 fn extern_fn_name(crate_name: &str, fn_name: &Ident) -> Ident {
     let crate_name = crate_name.to_lowercase().replace("-", "_");
-    let version = prefix_version();
+    // let version = prefix_version();
 
-    format_ident!("__{crate_name}_{version}_{fn_name}")
+    format_ident!("__{crate_name}_{fn_name}")
 }
 
 fn parse_def_extern_trait_args(args: TokenStream) -> Result<String, String> {
@@ -111,11 +111,14 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
     let crate_name_str = get_crate_name();
 
     let mut fn_list = vec![];
+    let crate_name = format_ident!("{}", crate_name_str.replace("-", "_"));
+
+    let crate_name_version = format!("{}_{}", crate_name_str, prefix_version());
 
     for item in &input.items {
         if let syn::TraitItem::Fn(func) = item {
             let fn_name = func.sig.ident.clone();
-            let extern_fn_name = extern_fn_name(&crate_name_str, &fn_name);
+            let extern_fn_name = extern_fn_name(&crate_name_version, &fn_name);
 
             let attrs = &func.attrs;
             let inputs = &func.sig.inputs;
@@ -151,8 +154,6 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
         }
     }
 
-    let crate_name = format_ident!("{}", crate_name_str.replace("-", "_"));
-
     let warn_fn_name = format_ident!(
         "Trait_{}_in_crate_{}_{}_need_impl",
         input.ident,
@@ -160,11 +161,12 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
         prefix_version()
     );
 
+
     let generated_macro = quote! {
         #[macro_export]
         macro_rules! impl_trait {
             (impl $trait:ident for $type:ty { $($body:tt)* }) => {
-                #[#crate_name::impl_extern_trait(name = #crate_name_str, abi = #abi)]
+                #[#crate_name::impl_extern_trait(name = #crate_name_version, abi = #abi)]
                 impl $trait for $type {
                     $($body)*
                 }
