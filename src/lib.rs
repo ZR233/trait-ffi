@@ -38,27 +38,37 @@ fn extern_fn_name(crate_name: &str, fn_name: &Ident) -> Ident {
     format_ident!("__{crate_name}_{fn_name}")
 }
 
-fn parse_def_extern_trait_args(args: TokenStream) -> Result<String, String> {
+fn parse_def_extern_trait_args(
+    args: TokenStream,
+) -> Result<(String, bool, Option<String>), String> {
     if args.is_empty() {
-        return Ok("rust".to_string()); // 默认使用 Rust ABI
+        return Ok(("rust".to_string(), false, None)); // 默认使用 Rust ABI，默认生成 impl_trait! 宏，无自定义模块路径
     }
 
     let args_str = args.to_string();
     let mut abi = None;
+    let mut not_def_impl = false;
+    let mut mod_path = None;
 
-    // 简单解析 abi="value" 形式
+    // 简单解析 abi="value"、not_def_impl 和 mod_path="value" 形式
     let parts: Vec<&str> = args_str.split(',').collect();
 
     for part in parts {
         let part = part.trim();
-        if part.starts_with("abi") {
-            if let Some(start) = part.find('"') {
-                if let Some(end) = part.rfind('"') {
-                    if start < end {
-                        abi = Some(part[start + 1..end].to_string());
-                    }
-                }
-            }
+        if part.starts_with("abi")
+            && let Some(start) = part.find('"')
+            && let Some(end) = part.rfind('"')
+            && start < end
+        {
+            abi = Some(part[start + 1..end].to_string());
+        } else if part.starts_with("mod_path")
+            && let Some(start) = part.find('"')
+            && let Some(end) = part.rfind('"')
+            && start < end
+        {
+            mod_path = Some(part[start + 1..end].to_string());
+        } else if part == "not_def_impl" {
+            not_def_impl = true;
         }
     }
 
@@ -68,7 +78,7 @@ fn parse_def_extern_trait_args(args: TokenStream) -> Result<String, String> {
         return Err("Invalid abi parameter. Supported values: \"c\", \"rust\"".to_string());
     }
 
-    Ok(abi)
+    Ok((abi, not_def_impl, mod_path))
 }
 
 /// Defines an extern trait that can be called across FFI boundaries.
@@ -77,11 +87,12 @@ fn parse_def_extern_trait_args(args: TokenStream) -> Result<String, String> {
 /// It generates:
 /// 1. The original trait definition
 /// 2. A module containing wrapper functions that call external implementations
-/// 3. A helper macro `impl_trait!` for implementing the trait
+/// 3. Optionally, a helper macro `impl_trait!` for implementing the trait (unless `not_def_impl` is specified)
 /// 4. A checker function to ensure the trait is properly implemented
 ///
 /// # Arguments
 /// - `abi`: Optional parameter specifying ABI type ("c" or "rust"), defaults to "rust"
+/// - `not_def_impl`: Optional parameter to skip generating the `impl_trait!` macro
 ///
 /// # Example
 /// ```rust
@@ -90,13 +101,19 @@ fn parse_def_extern_trait_args(args: TokenStream) -> Result<String, String> {
 ///     fn add(&self, a: i32, b: i32) -> i32;
 ///     fn multiply(&self, a: i32, b: i32) -> i32;
 /// }
+///
+/// // Skip generating impl_trait! macro
+/// #[def_extern_trait(abi = "c", not_def_impl)]
+/// trait Calculator2 {
+///     fn add(&self, a: i32, b: i32) -> i32;
+/// }
 /// ```
 ///
 /// This will generate a `calculator` module containing functions that can call external implementations.
 #[proc_macro_attribute]
 pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
-    let abi = match parse_def_extern_trait_args(args) {
-        Ok(abi) => abi,
+    let (abi, not_def_impl, _mod_path) = match parse_def_extern_trait_args(args) {
+        Ok((abi, not_def_impl, mod_path)) => (abi, not_def_impl, mod_path),
         Err(error_msg) => {
             bail!(Span::call_site(), error_msg);
         }
@@ -112,6 +129,16 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
 
     let mut fn_list = vec![];
     let crate_name = format_ident!("{}", crate_name_str.replace("-", "_"));
+    let mut crate_path_tokens = quote! { #crate_name };
+    if let Some(mod_path) = _mod_path {
+        // 解析 mod_path 并生成路径tokens
+        let path_segments: Vec<&str> = mod_path.split("::").collect();
+        let path_idents: Vec<proc_macro2::Ident> = path_segments
+            .iter()
+            .map(|segment| format_ident!("{}", segment))
+            .collect();
+        crate_path_tokens = quote! { #crate_name::#(#path_idents)::* };
+    }
 
     let crate_name_version = format!("{}_{}", crate_name_str, prefix_version());
 
@@ -161,26 +188,29 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
         prefix_version()
     );
 
+    let generated_macro = if not_def_impl {
+        quote! {}
+    } else {
+        quote! {
+            pub use trait_ffi::impl_extern_trait;
 
-    let generated_macro = quote! {
-        #[macro_export]
-        macro_rules! impl_trait {
-            (impl $trait:ident for $type:ty { $($body:tt)* }) => {
-                #[#crate_name::impl_extern_trait(name = #crate_name_version, abi = #abi)]
-                impl $trait for $type {
-                    $($body)*
-                }
+            #[macro_export]
+            macro_rules! impl_trait {
+                (impl $trait:ident for $type:ty { $($body:tt)* }) => {
+                    #[#crate_path_tokens::impl_extern_trait(name = #crate_name_version, abi = #abi)]
+                    impl $trait for $type {
+                        $($body)*
+                    }
 
-                #[allow(snake_case)]
-                #[unsafe(no_mangle)]
-                extern "C" fn #warn_fn_name() { }
-            };
+                    #[allow(snake_case)]
+                    #[unsafe(no_mangle)]
+                    extern "C" fn #warn_fn_name() { }
+                };
+            }
         }
     };
 
     quote! {
-        pub use trait_ffi::impl_extern_trait;
-
         #input
 
         #vis mod #mod_name {
@@ -217,21 +247,18 @@ fn parse_extern_trait_args(args: TokenStream) -> Result<(String, String), String
     for part in parts {
         let part = part.trim();
         if part.starts_with("name") {
-            if let Some(start) = part.find('"') {
-                if let Some(end) = part.rfind('"') {
-                    if start < end {
-                        name = Some(part[start + 1..end].to_string());
-                    }
-                }
+            if let Some(start) = part.find('"')
+                && let Some(end) = part.rfind('"')
+                && start < end
+            {
+                name = Some(part[start + 1..end].to_string());
             }
-        } else if part.starts_with("abi") {
-            if let Some(start) = part.find('"') {
-                if let Some(end) = part.rfind('"') {
-                    if start < end {
-                        abi = Some(part[start + 1..end].to_string());
-                    }
-                }
-            }
+        } else if part.starts_with("abi")
+            && let Some(start) = part.find('"')
+            && let Some(end) = part.rfind('"')
+            && start < end
+        {
+            abi = Some(part[start + 1..end].to_string());
         }
     }
 

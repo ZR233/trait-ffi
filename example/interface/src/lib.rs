@@ -1,11 +1,11 @@
-use trait_ffi::*;
+pub mod aaa;
 
-#[def_extern_trait]
-pub trait DemeIf {
-    fn say_hello<'a>(a: usize) -> i32;
+pub fn if_say_hello<'a>(a: usize) -> &'a str {
+    println!("Hello from DemeIf with value: {a}");
+    aaa::deme_if::say_hello(a)
 }
 
-pub fn if_say_hello(a: usize) -> i32 {
-    println!("Hello from DemeIf with value: {a}");
-    deme_if::say_hello(a)
+pub fn test_trait_function(x: i32) -> i32 {
+    println!("Calling test function with value: {x}");
+    aaa::test_trait_without_impl_macro::test_function(x)
 }
