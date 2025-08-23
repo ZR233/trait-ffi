@@ -182,7 +182,7 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
         }
     }
 
-    let warn_fn_name = format_ident!(
+    let _warn_fn_name = format_ident!(
         "Trait_{}_in_crate_{}_{}_need_impl",
         input.ident,
         crate_name_str.replace("-", "_"),
