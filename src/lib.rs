@@ -203,9 +203,9 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
                         $($body)*
                     }
 
-                    #[allow(snake_case)]
-                    #[unsafe(no_mangle)]
-                    extern "C" fn #warn_fn_name() { }
+                    // #[allow(snake_case)]
+                    // #[unsafe(no_mangle)]
+                    // extern "C" fn #warn_fn_name() { }
                 };
             }
         }
@@ -217,12 +217,12 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
         #vis mod #mod_name {
             use super::*;
             /// `trait-ffi` generated.
-            pub fn ____checker_do_not_use(){
-                unsafe extern "C" {
-                    fn #warn_fn_name();
-                }
-                unsafe { #warn_fn_name() };
-            }
+            // pub fn ____checker_do_not_use(){
+            //     unsafe extern "C" {
+            //         fn #warn_fn_name();
+            //     }
+            //     unsafe { #warn_fn_name() };
+            // }
             #(#fn_list)*
         }
 

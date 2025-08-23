@@ -1,4 +1,7 @@
-use interface_demo::{aaa::DemeIf, impl_trait};
+use interface_demo::{
+    aaa::{DemeIf, TestTraitWithoutImplMacro},
+    impl_trait,
+};
 
 pub struct MyImpl;
 
@@ -7,6 +10,17 @@ impl_trait! {
         unsafe fn say_hello<'a>(a: usize) -> &'a str {
             println!("Hello from MyImpl with value: {a}");
             "Hello from MyImpl"
+        }
+    }
+}
+
+pub struct TestImpl;
+
+impl_trait! {
+    impl TestTraitWithoutImplMacro for TestImpl {
+        fn test_function(x: i32) -> i32 {
+            println!("TestImpl test_function called with value: {x}");
+            x * 2
         }
     }
 }

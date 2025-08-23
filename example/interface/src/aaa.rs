@@ -2,6 +2,8 @@ use trait_ffi::*;
 
 #[def_extern_trait(mod_path = "aaa")]
 pub trait DemeIf {
+    /// # Safety
+    ///
     unsafe fn say_hello<'a>(a: usize) -> &'a str;
 }
 
