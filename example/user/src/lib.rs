@@ -4,7 +4,7 @@ pub struct MyImpl;
 
 impl_trait! {
     impl DemeIf for MyImpl {
-        fn say_hello<'a>(a: usize) -> &'a str {
+        unsafe fn say_hello<'a>(a: usize) -> &'a str {
             println!("Hello from MyImpl with value: {a}");
             "Hello from MyImpl"
         }

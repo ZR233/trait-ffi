@@ -151,6 +151,7 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
             let inputs = &func.sig.inputs;
             let output = &func.sig.output;
             let generics = &func.sig.generics;
+            let unsafety = &func.sig.unsafety;
 
             let mut param_names = vec![];
             let mut param_types = vec![];
@@ -166,7 +167,7 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
 
             fn_list.push(quote! {
                 #(#attrs)*
-                pub fn #fn_name #generics (#inputs) #output {
+                pub #unsafety fn #fn_name #generics (#inputs) #output {
                     unsafe extern #extern_abi {
                         fn #extern_fn_name #generics (#inputs) #output;
                     }
@@ -320,6 +321,7 @@ pub fn impl_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
             let inputs = &func.sig.inputs;
             let output = &func.sig.output;
             let generics = &func.sig.generics;
+            let unsafety = &func.sig.unsafety;
 
             let extern_abi = if abi == "rust" { "Rust" } else { "C" };
 
@@ -332,12 +334,18 @@ pub fn impl_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
                     param_types.push(&pat_type.ty);
                 }
             }
+            let mut body = quote! {
+                <#struct_name as #trait_name>::#fn_name_raw(#(#param_names),*)
+            };
 
+            if unsafety.is_some() {
+                body = quote! { unsafe { #body } };
+            }
             extern_fn_list.push(quote! {
                 /// `trait-ffi` generated extern function.
                 #[unsafe(no_mangle)]
-                pub extern #extern_abi fn #fn_name #generics (#inputs) #output {
-                    <#struct_name as #trait_name>::#fn_name_raw(#(#param_names),*)
+                pub #unsafety extern #extern_abi fn #fn_name #generics (#inputs) #output {
+                    #body
                 }
             });
         }

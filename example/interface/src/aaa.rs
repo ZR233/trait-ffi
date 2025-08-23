@@ -2,7 +2,7 @@ use trait_ffi::*;
 
 #[def_extern_trait(mod_path = "aaa")]
 pub trait DemeIf {
-    fn say_hello<'a>(a: usize) -> &'a str;
+    unsafe fn say_hello<'a>(a: usize) -> &'a str;
 }
 
 // 测试新的 not_def_impl 参数
