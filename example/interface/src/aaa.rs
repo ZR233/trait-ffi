@@ -5,6 +5,9 @@ pub trait DemeIf {
     /// # Safety
     ///
     unsafe fn say_hello<'a>(a: usize) -> &'a str;
+
+    #[cfg(feature = "all")]
+    fn ft_all() -> &'static str;
 }
 
 // 测试新的 not_def_impl 参数

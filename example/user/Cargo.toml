@@ -4,6 +4,9 @@ name = "user"
 publish = false
 version = "0.1.0"
 
+[features]
+all = ["interface-demo/all"]
+
 [dependencies]
 interface-demo = {path = "../interface"}
 trait-ffi = {path = "../.."}

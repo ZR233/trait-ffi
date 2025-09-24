@@ -322,6 +322,8 @@ pub fn impl_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
             let output = &func.sig.output;
             let generics = &func.sig.generics;
             let unsafety = &func.sig.unsafety;
+            // preserve attributes from the original impl method (e.g. #[cfg], docs)
+            let attrs = &func.attrs;
 
             let extern_abi = if abi == "rust" { "Rust" } else { "C" };
 
@@ -342,6 +344,7 @@ pub fn impl_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
                 body = quote! { unsafe { #body } };
             }
             extern_fn_list.push(quote! {
+                #(#attrs)*
                 /// `trait-ffi` generated extern function.
                 #[unsafe(no_mangle)]
                 pub #unsafety extern #extern_abi fn #fn_name #generics (#inputs) #output {

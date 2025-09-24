@@ -7,7 +7,7 @@ keywords = ["proc-macro", "abi", "trait", "extern"]
 license = "MIT"
 name = "trait-ffi"
 repository = "https://github.com/ZR233/trait-ffi"
-version = "0.2.8"
+version = "0.2.9"
 
 [lib]
 proc-macro = true

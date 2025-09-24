@@ -11,6 +11,11 @@ impl_trait! {
             println!("Hello from MyImpl with value: {a}");
             "Hello from MyImpl"
         }
+
+        #[cfg(feature = "all")]
+        fn ft_all() -> &'static str {
+            "Hello from MyImpl's implementation of ft_all"
+        }
     }
 }
 
