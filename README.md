@@ -17,7 +17,7 @@ This library provides procedural macros to define and implement cross-crate exte
 Define an external trait in the interface crate:
 
 ```rust
-use extern_trait::*;
+use trait_ffi::*;
 
 #[def_extern_trait]
 pub trait DemeIf {
