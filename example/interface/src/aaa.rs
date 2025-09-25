@@ -1,5 +1,6 @@
 use trait_ffi::*;
 
+/// demo if trait
 #[def_extern_trait(mod_path = "aaa")]
 pub trait DemeIf {
     /// # Safety
