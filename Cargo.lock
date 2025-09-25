@@ -84,7 +84,7 @@ dependencies = [
 
 [[package]]
 name = "trait-ffi"
-version = "0.2.10"
+version = "0.2.11"
 dependencies = [
  "convert_case",
  "lenient_semver",

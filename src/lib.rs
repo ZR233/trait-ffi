@@ -196,6 +196,7 @@ pub fn def_extern_trait(args: TokenStream, input: TokenStream) -> TokenStream {
             /// Helper macro to implement the extern trait for a type.
             pub use trait_ffi::impl_extern_trait;
 
+            /// Implement the extern trait for a type.
             #[macro_export]
             macro_rules! impl_trait {
                 (impl $trait:ident for $type:ty { $($body:tt)* }) => {
